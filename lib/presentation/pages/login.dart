@@ -2,29 +2,25 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 import 'package:tree_com/core/utils/toast.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _LoginPageState extends State<LoginPage> {
   bool isPasswordObscure = true;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
 
   bool _validate() {
-    if (emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        nameController.text.isEmpty) {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       CustomToast.showErrorToast("Please fill all the fields!");
       return false;
     } else if (!emailController.text.contains('@') ||
@@ -41,21 +37,21 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void initState() {
+    super.initState();
     UserBloc userBloc = context.read<UserBloc>();
     userBloc.stream.listen((event) {
-      if (event is UserRegistered) {
+      if (event is UserLoggedIn) {
         CustomToast.hideLoadingToast(context);
         AppPreferences.setAccessToken(event.tokenData.accessToken);
-        CustomToast.showSuccessToast("User registered successfully!");
+        CustomToast.showSuccessToast("Login Successful!");
         Navigator.pushNamed(context, "home");
-      } else if (event is UserRegistrationFailed) {
+      } else if (event is UserLoggedInFailed) {
         CustomToast.hideLoadingToast(context);
         CustomToast.showErrorToast(event.message);
-      } else if (event is UserRegistering) {
-        CustomToast.showLoadingToast(context, "Signing Up...");
+      } else if (event is UserLogging) {
+        CustomToast.showLoadingToast(context, "Logging in...");
       }
     });
-    super.initState();
   }
 
   @override
@@ -102,7 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "Sign Up",
+                              "Login",
                               style: TextStyle(
                                   fontSize: 20,
                                   color: Color(0xff7A57D1),
@@ -120,34 +116,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             )
                           ],
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Container(
-                          height: height * 0.07,
-                          decoration: BoxDecoration(
-                            color: const Color(0xffeeeeee),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: TextField(
-                            onTapOutside: (e) {
-                              FocusScope.of(context).unfocus();
-                            },
-                            controller: nameController,
-                            decoration: const InputDecoration(
-                                border: OutlineInputBorder(
-                                    borderSide: BorderSide.none),
-                                hintText: "Enter your Full Name",
-                                hintStyle: TextStyle(
-                                    color: Color(0xff666666),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400),
-                                prefixIcon: Icon(
-                                  BootstrapIcons.person,
-                                  color: Color(0xff0D7194),
-                                )),
-                          ),
-                        ),
                         const SizedBox(height: 10),
                         Container(
                           height: height * 0.07,
@@ -159,7 +127,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             onTapOutside: (e) {
                               FocusScope.of(context).unfocus();
                             },
-                            keyboardType: TextInputType.emailAddress,
                             controller: emailController,
                             decoration: const InputDecoration(
                                 border: OutlineInputBorder(
@@ -175,28 +142,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 )),
                           ),
                         ),
-                        // const SizedBox(height: 10),
-                        // Container(
-                        //   height: height * 0.07,
-                        //   decoration: BoxDecoration(
-                        //     color: const Color(0xffeeeeee),
-                        //     borderRadius: BorderRadius.circular(30),
-                        //   ),
-                        //   child: TextField(
-                        //     decoration: const InputDecoration(
-                        //         border: OutlineInputBorder(
-                        //             borderSide: BorderSide.none),
-                        //         hintText: "Enter your location",
-                        //         hintStyle: TextStyle(
-                        //             color: Color(0xff666666),
-                        //             fontSize: 15,
-                        //             fontWeight: FontWeight.w400),
-                        //         prefixIcon: Icon(
-                        //           BootstrapIcons.geo_alt,
-                        //           color: Color(0xff0D7194),
-                        //         )),
-                        //   ),
-                        // ),
                         const SizedBox(height: 10),
                         Container(
                           height: height * 0.07,
@@ -213,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             decoration: InputDecoration(
                               border: const OutlineInputBorder(
                                   borderSide: BorderSide.none),
-                              hintText: "Set a password",
+                              hintText: "Enter your password",
                               hintStyle: const TextStyle(
                                   color: Color(0xff666666),
                                   fontSize: 15,
@@ -249,10 +194,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         GestureDetector(
                           onTap: () {
                             if (_validate()) {
-                              context.read<UserBloc>().add(RegisterUser(
-                                  emailController.text,
-                                  nameController.text,
-                                  passwordController.text));
+                              context.read<UserBloc>().add(LoginUser(
+                                  email: emailController.text,
+                                  password: passwordController.text));
                             }
                           },
                           child: Container(
@@ -263,7 +207,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             child: const Center(
                               child: Text(
-                                "Sign Up",
+                                "Login",
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
@@ -278,13 +222,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("Already have an account?"),
+                            const Text("Don't have an account?"),
                             GestureDetector(
                               onTap: () {
-                                Navigator.pushNamed(context, "login");
+                                Navigator.pushNamed(context, "register");
                               },
                               child: const Text(
-                                " Login",
+                                " Sign Up",
                                 style: TextStyle(
                                     color: Color(0xff0D7194),
                                     fontWeight: FontWeight.w700),
