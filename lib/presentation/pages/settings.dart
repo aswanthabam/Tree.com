@@ -1,6 +1,4 @@
-import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tree_com/core/layouts/back_bar_layout.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 import 'package:tree_com/core/widgets/action_button.dart';

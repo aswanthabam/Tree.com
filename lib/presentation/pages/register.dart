@@ -2,7 +2,6 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 import 'package:tree_com/core/utils/toast.dart';
