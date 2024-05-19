@@ -2,7 +2,6 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tree_com/core/layouts/back_bar_layout.dart';
 import 'package:tree_com/core/layouts/bottom_bar_layout.dart';
 import 'package:tree_com/core/utils/toast.dart';
 
