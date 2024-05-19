@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tree_com/core/theme/app_theme.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
+import 'package:tree_com/presentation/pages/capture.dart';
 import 'package:tree_com/presentation/pages/home.dart';
 import 'package:tree_com/presentation/pages/login.dart';
 import 'package:tree_com/presentation/pages/profile.dart';
@@ -35,5 +36,6 @@ void main() {
             'home': (context) => const HomePage(),
             'profile': (context) => const ProfilePage(),
             'splash_screen': (context) => const SplashScreen(),
+            'capture': (context) => const CapturePage(),
           })));
 }
