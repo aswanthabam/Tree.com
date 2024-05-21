@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
+import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     print(accessToken);
     await Future.delayed(const Duration(seconds: 1));
     if (accessToken != null) {
+      API.fetchAccessToken();
       Navigator.pushReplacementNamed(context, 'home');
     } else {
       Navigator.pushReplacementNamed(context, 'register');

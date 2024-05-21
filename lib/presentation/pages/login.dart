@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
+import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 import 'package:tree_com/core/utils/toast.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
@@ -42,7 +43,10 @@ class _LoginPageState extends State<LoginPage> {
     userBloc.stream.listen((event) {
       if (event is UserLoggedIn) {
         CustomToast.hideLoadingToast(context);
-        AppPreferences.setAccessToken(event.tokenData.accessToken);
+        AppPreferences.setAccessToken(event.tokenData.accessToken)
+            .then((value) {
+          API.fetchAccessToken();
+        });
         CustomToast.showSuccessToast("Login Successful!");
         Navigator.pushNamed(context, "home");
       } else if (event is UserLoggedInFailed) {

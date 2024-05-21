@@ -1,14 +1,29 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
+
+import 'package:http_parser/http_parser.dart';
+import 'package:tree_com/core/utils/preferences.dart';
 
 class API {
   // static String apiUrl = 'https://treecom.vercel.app';
   static String apiUrl = 'http://10.0.2.2:8000';
+  static String? accessToken;
+  final Map<String, String> headers = {};
+
+  static void fetchAccessToken() async {
+    API.accessToken = await AppPreferences.accessToken;
+  }
+
+  API() {
+    headers['Authorization'] = 'Bearer $accessToken';
+  }
 
   Future<APIResponse> get(String path) async {
     try {
-      final response = await http.get(Uri.parse('$apiUrl/$path'));
+      final response = await http.get(Uri.parse('$apiUrl/$path'),
+          headers: headers..addAll({'Content-Type': 'application/json'}));
       return getResponse(response.body);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});
@@ -19,9 +34,35 @@ class API {
     try {
       final response = await http.post(Uri.parse('$apiUrl/$path'),
           body: json.encode(body),
-          headers: {'Content-Type': 'application/json'}
-      );
+          headers: headers..addAll({'Content-Type': 'application/json'}));
+      print(response.body);
       return getResponse(response.body);
+    } catch (e) {
+      return APIResponse(hasError: true, message: e.toString(), data: {});
+    }
+  }
+
+  Future<APIResponse> postImage(
+      String path, File file, Map<String, dynamic> body) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse("$apiUrl/$path"));
+      request.headers.addAll(headers);
+      body.forEach((key, value) {
+        request.fields[key] = value;
+      });
+      print("DNJDDDDDDDDDDDDDDDDDD");
+      print(request.headers);
+      var fileStream = http.ByteStream(file.openRead());
+      var length = await file.length();
+      var multipartFile = http.MultipartFile('image', fileStream, length,
+          filename: file.path.split('/').last,
+          contentType: MediaType(
+              'image', 'jpeg')); // Adjust the content type accordingly
+
+      request.files.add(multipartFile);
+      var response = await request.send();
+      var responseString = await response.stream.bytesToString();
+      return getResponse(responseString);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});
     }
@@ -31,7 +72,7 @@ class API {
     try {
       final response = await http.put(Uri.parse('$apiUrl/$path'),
           body: json.encode(body),
-          headers: {'Content-Type': 'application/json'});
+          headers: headers..addAll({'Content-Type': 'application/json'}));
       return getResponse(response.body);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});
@@ -40,7 +81,8 @@ class API {
 
   Future<APIResponse> delete(String path) async {
     try {
-      final response = await http.delete(Uri.parse('$apiUrl/$path'));
+      final response =
+          await http.delete(Uri.parse('$apiUrl/$path'), headers: headers);
       return getResponse(response.body);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});

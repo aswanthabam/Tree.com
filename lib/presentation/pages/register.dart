@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
+import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 import 'package:tree_com/core/utils/toast.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
@@ -44,7 +45,10 @@ class _RegisterPageState extends State<RegisterPage> {
     userBloc.stream.listen((event) {
       if (event is UserRegistered) {
         CustomToast.hideLoadingToast(context);
-        AppPreferences.setAccessToken(event.tokenData.accessToken);
+        AppPreferences.setAccessToken(event.tokenData.accessToken)
+            .then((value) {
+          API.fetchAccessToken();
+        });
         CustomToast.showSuccessToast("User registered successfully!");
         Navigator.pushNamed(context, "home");
       } else if (event is UserRegistrationFailed) {
