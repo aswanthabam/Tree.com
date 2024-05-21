@@ -7,13 +7,17 @@ import 'package:http_parser/http_parser.dart';
 import 'package:tree_com/core/utils/preferences.dart';
 
 class API {
-  // static String apiUrl = 'https://treecom.vercel.app';
-  static String apiUrl = 'http://10.0.2.2:8000';
+  static String apiUrl = 'https://treecom.vercel.app';
+  // static String apiUrl = 'http://10.0.2.2:8000';
   static String? accessToken;
   final Map<String, String> headers = {};
 
   static void fetchAccessToken() async {
     API.accessToken = await AppPreferences.accessToken;
+  }
+
+  static void setAPIUrl(String url) {
+    apiUrl = url;
   }
 
   API() {
@@ -50,8 +54,6 @@ class API {
       body.forEach((key, value) {
         request.fields[key] = value;
       });
-      print("DNJDDDDDDDDDDDDDDDDDD");
-      print(request.headers);
       var fileStream = http.ByteStream(file.openRead());
       var length = await file.length();
       var multipartFile = http.MultipartFile('image', fileStream, length,

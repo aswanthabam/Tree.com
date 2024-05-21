@@ -19,6 +19,8 @@ import 'data/repositories/user_repository.dart';
 
 void main() async {
   await dotenv.load(fileName: "./.env");
+  API.setAPIUrl(await dotenv.env['API_URL'] ??
+      'http://localhost:3000/haha/you_forgot_to_set_the_api_url_in_.env');
   runApp(MultiBlocProvider(
       providers: [
         BlocProvider<UserBloc>(
