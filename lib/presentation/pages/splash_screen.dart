@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
 import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/preferences.dart';
@@ -19,8 +20,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void initialize(context) async {
     String? accessToken = await AppPreferences.accessToken;
-    print(accessToken);
     await Future.delayed(const Duration(seconds: 1));
+    if (!await Permission.location.status.isGranted) {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: const Text('Location Permission'),
+                content: const Text(
+                    'This app requires location permission to work properly'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'))
+                ],
+              )).then((value) {
+        Permission.location.request();
+      });
+    }
     if (accessToken != null) {
       API.fetchAccessToken();
       Navigator.pushReplacementNamed(context, 'home');
