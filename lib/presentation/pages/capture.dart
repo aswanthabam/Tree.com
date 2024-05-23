@@ -3,14 +3,12 @@ import 'dart:io';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:tree_com/core/layouts/bottom_bar_layout.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
 import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/toast.dart';
@@ -388,7 +386,6 @@ class _CapturePageState extends State<CapturePage> {
                 setState(() {});
               });
             }
-            break;
           default:
             print(e.code);
             CustomToast.showErrorToast("An error occurred :(");
