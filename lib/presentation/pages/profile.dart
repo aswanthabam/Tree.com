@@ -25,199 +25,256 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
     return BottomBarLayout(
         currentIndex: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Spacer(),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                                pageBuilder: (context, anim1, anim2) =>
-                                    const SettingsPage(),
-                                transitionsBuilder:
-                                    (context, anim1, anim2, child) {
-                                  return SlideTransition(
-                                    position: Tween(
-                                            begin: const Offset(1, 0),
-                                            end: Offset.zero)
-                                        .animate(anim1),
-                                    child: child,
-                                  );
-                                }));
-                      },
-                      icon: const Icon(
-                        Icons.settings,
-                        color: Colors.grey,
-                      ))
-                ],
-              ),
-              BlocBuilder<UserBloc, UserState>(builder: (context, state) {
-                if (state is UserProfileLoading) {
-                  return const CircularProgressIndicator();
-                }
-                if (state is UserProfileLoadingFailed) {
-                  return Text(state.message);
-                }
-                if (state is UserProfileLoaded) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Spacer(),
+                        IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                      pageBuilder: (context, anim1, anim2) =>
+                                          const SettingsPage(),
+                                      transitionsBuilder:
+                                          (context, anim1, anim2, child) {
+                                        return SlideTransition(
+                                          position: Tween(
+                                                  begin: const Offset(1, 0),
+                                                  end: Offset.zero)
+                                              .animate(anim1),
+                                          child: child,
+                                        );
+                                      }));
+                            },
+                            icon: const Icon(
+                              Icons.settings,
+                              color: Colors.grey,
+                            ))
+                      ],
+                    ),
+                    BlocBuilder<UserBloc, UserState>(builder: (context, state) {
+                      if (state is UserProfileLoading) {
+                        return const CircularProgressIndicator();
+                      }
+                      if (state is UserProfileLoadingFailed) {
+                        return Text(state.message);
+                      }
+                      if (state is UserProfileLoaded) {
+                        return Stack(
                           children: [
-                            Stack(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Positioned(child: Container(
-                                  width: 76,
-                                  height: 76,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(60),
-                                    gradient: LinearGradient(
-                                        begin: Alignment
-                                            .topLeft,
-                                        end: Alignment
-                                            .bottomRight,
-                                        colors: [
-                                          Color(0xff7A57D1),
-                                          Color(0xff4FC1E9),
-                                          Color(0xff009E76)
-                                        ]),
-                                  ),
-                                )),
-                                Positioned(
-                                  width: 70,
-                                  height: 70,
-                                  top: 3,
-                                  left: 3,
-                                  child: Image.asset(
-                                    "assets/images/profile_placeholder.png",
-                                    width: 70,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 3.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    state.userProfile.name,
-                                    style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  Text("@${state.userProfile.username}"),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20,),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(state.userProfile.bio == null ? "Bio not added!" : state.userProfile.bio!),
-                      ),
-                      const SizedBox(height: 20,),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        child: Text("Tree Stories", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade600),),
-                      ),
-                      Container(
-                        width: width,
-                        child: SingleChildScrollView(
-                          child: Row(
-                            children: state.userProfile.trees
-                                .map((e) => Container(
-                                      margin: EdgeInsets.all(10),
-                                      child: Column(
+                                Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Stack(
                                         children: [
-                                          Stack(
-                                            children: [
-                                              SizedBox(
-                                                width: 66,
-                                                height: 66,
-                                              ),
-                                              Positioned(
-                                                  width: 66,
-                                                  height: 66,
-                                                  top: 0,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                            begin: Alignment
-                                                                .topLeft,
-                                                            end: Alignment
-                                                                .bottomRight,
-                                                            colors: [
-                                                              Color(0xff7A57D1),
-                                                              Color(0xff5BE7C4)
-                                                            ]),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(50)),
-                                                  )),
-                                              Positioned(
-                                                width: 60,
-                                                height: 60,
-                                                top: 3,
-                                                left: 3,
-                                                child: ClipRRect(
-                                                  child: Image.network(
-                                                    API.getImageUrl(e.imageUrl),
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          SizedBox(
-                                            width: 80,
-                                            child: Text(
-                                              e.title,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.grey.shade700),
+                                          Positioned(
+                                              child: Container(
+                                            width: 76,
+                                            height: 76,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(60),
+                                              gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    Color(0xff7A57D1),
+                                                    Color(0xff4FC1E9),
+                                                    Color(0xff009E76)
+                                                  ]),
                                             ),
-                                          )
+                                          )),
+                                          Positioned(
+                                            width: 70,
+                                            height: 70,
+                                            top: 3,
+                                            left: 3,
+                                            child: Image.asset(
+                                              "assets/images/profile_placeholder.png",
+                                              width: 70,
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      ),
-                      const Divider(),
+                                      const SizedBox(
+                                        width: 20,
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 3.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              state.userProfile.name,
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            Text(
+                                                "@${state.userProfile.username}"),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  child: Text(state.userProfile.bio == null
+                                      ? "Bio not added!"
+                                      : state.userProfile.bio!),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  child: Text(
+                                    "Tree Stories",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.grey.shade600),
+                                  ),
+                                ),
+                                Container(
+                                  width: width,
+                                  child: SingleChildScrollView(
+                                    child: Row(
+                                      children: state.userProfile.trees
+                                          .map((e) => Container(
+                                                margin: EdgeInsets.all(10),
+                                                child: Column(
+                                                  children: [
+                                                    Stack(
+                                                      children: [
+                                                        SizedBox(
+                                                          width: 66,
+                                                          height: 66,
+                                                        ),
+                                                        Positioned(
+                                                            width: 66,
+                                                            height: 66,
+                                                            top: 0,
+                                                            child: Container(
+                                                              decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                      begin: Alignment
+                                                                          .topLeft,
+                                                                      end: Alignment.bottomRight,
+                                                                      colors: [
+                                                                        Color(
+                                                                            0xff7A57D1),
+                                                                        Color(
+                                                                            0xff5BE7C4)
+                                                                      ]),
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              50)),
+                                                            )),
+                                                        Positioned(
+                                                          width: 60,
+                                                          height: 60,
+                                                          top: 3,
+                                                          left: 3,
+                                                          child: ClipRRect(
+                                                            child:
+                                                                Image.network(
+                                                              API.getImageUrl(
+                                                                  e.imageUrl),
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        50),
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 10,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 80,
+                                                      child: Text(
+                                                        e.title,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: Colors
+                                                                .grey.shade700),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+                                const Divider(),
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+                      return const SizedBox();
+                    })
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: height,
+            ),
+            Positioned(
+                bottom: 10,
+                right: 10,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                      color: Color(0xff5BE7C4),
+                      borderRadius: BorderRadius.circular(50)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      const SizedBox(width: 10,),
+                      Text("Post", style: TextStyle(fontWeight: FontWeight.w600),),
                     ],
-                  );
-                }
-                return const SizedBox();
-              })
-            ],
-          ),
+                  ),
+                ))
+          ],
         ));
   }
 }
