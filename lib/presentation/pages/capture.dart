@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tree_com/core/layouts/bottom_bar_layout.dart';
 import 'package:tree_com/core/layouts/no_appbar_layout.dart';
@@ -34,12 +35,13 @@ class _CapturePageState extends State<CapturePage> {
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   File? image;
+  bool capturing = false;
+  late Future<void> _future;
 
   @override
   void initState() {
     super.initState();
     treesBloc = context.read<TreesBloc>();
-    _initCamera();
     treesBloc.stream.listen((event) {
       if (event is TreesAddSuccess) {
         CustomToast.hideLoadingToast(context);
@@ -70,6 +72,7 @@ class _CapturePageState extends State<CapturePage> {
       }
       if (event is TreesGetNearbySuccess) {}
     });
+    _future = _setupServices();
   }
 
   Widget _getAddTreeDialogSheet(context) {
@@ -356,22 +359,38 @@ class _CapturePageState extends State<CapturePage> {
     );
   }
 
-  void _initCamera() async {
+  Future<void> _initCamera() async {
     cameras = await availableCameras();
-    controller = CameraController(cameras[0], ResolutionPreset.max);
-    controller?.initialize().then((_) {
+    controller =
+        CameraController(cameras[0], ResolutionPreset.max, enableAudio: false);
+    await controller?.initialize().then((_) {
       if (!mounted) {
         return;
       }
       setState(() {});
-    }).catchError((Object e) {
+    }).catchError((Object e) async {
       if (e is CameraException) {
         switch (e.code) {
           case 'CameraAccessDenied':
             CustomToast.showErrorToast(
                 "We can't continue without camera access");
+            if (await Permission.camera.status.isPermanentlyDenied) {
+              throw CameraPermissionDeniedForeverException(
+                  'Camera access is permanently denied', () async {
+                await Geolocator.openAppSettings();
+                _future = _setupServices();
+                setState(() {});
+              });
+            } else {
+              throw CameraPermissionDeniedException('Camera access is denied',
+                  () async {
+                _future = _setupServices();
+                setState(() {});
+              });
+            }
             break;
           default:
+            print(e.code);
             CustomToast.showErrorToast("An error occurred :(");
             break;
         }
@@ -380,9 +399,17 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<Position?> _getCurrentLocation() async {
-    currentLocation = await Geolocator.getCurrentPosition();
+    currentLocation = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     setState(() {});
     return currentLocation;
+  }
+
+  Future<void> _setupServices() async {
+    await _initCamera().catchError((e) {
+      return Future.error(e);
+    });
+    return await _setupLocationService();
   }
 
   Future<void> _setupLocationService() async {
@@ -391,21 +418,35 @@ class _CapturePageState extends State<CapturePage> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       CustomToast.showErrorToast("Location services are disabled.");
-      return Future.error('Location services are disabled.');
+      return Future.error(
+          LocationServiceDisabledException('Location services are disabled.'));
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         CustomToast.showErrorToast("Location permissions are denied");
-        return Future.error('Location permissions are denied');
+        return Future.error(LocationPermissionDeniedException(
+            'Location permissions are denied', () {
+          setState(() {
+            _future = _setupLocationService();
+          });
+        }));
       }
     }
     if (permission == LocationPermission.deniedForever) {
       CustomToast.showErrorToast(
           "Location permissions are permanently denied, please grant the permissions from settings.");
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      return Future.error(LocationPermissionDeniedForeverException(
+          'Location permissions are permanently denied, we cannot request permissions.',
+          () async {
+        if (await Permission.location.status.isDenied) {
+          await Geolocator.openAppSettings();
+        }
+        setState(() {
+          _future = _setupLocationService();
+        });
+      }));
     }
     return Future.value();
   }
@@ -418,10 +459,16 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   Future<bool> _capture() async {
+    setState(() {
+      capturing = true;
+    });
     XFile? file = await controller?.takePicture();
     await controller?.pausePreview();
     Position? pos = await _getCurrentLocation();
     if (pos == null) {
+      setState(() {
+        capturing = false;
+      });
       CustomToast.showErrorToast("Unable to get current location!");
       return false;
     }
@@ -429,11 +476,15 @@ class _CapturePageState extends State<CapturePage> {
     double lon = pos.longitude;
     treesBloc.add(GetNearbyTreesEvent(latitude: lat, longitude: lon));
     if (file == null) {
+      setState(() {
+        capturing = false;
+      });
       return false;
     }
     file.saveTo("${(await getTemporaryDirectory()).path}/temp.jpg");
     image = File("${(await getTemporaryDirectory()).path}/temp.jpg");
     setState(() {
+      capturing = false;
       captured = true;
     });
     return true;
@@ -445,79 +496,159 @@ class _CapturePageState extends State<CapturePage> {
     final double height = MediaQuery.of(context).size.height;
     return NoAppBarLayout(
         padding: 0,
-        child: FutureBuilder(
-          future: _setupLocationService(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(snapshot.error.toString()),
-                );
-              }
-              return controller == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                      width: width,
-                      height: height,
-                      child: Stack(
+        child: Stack(
+          children: [
+            SizedBox(
+              width: width,
+              height: height,
+            ),
+            FutureBuilder(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: width,
-                            height: height,
+                          Icon(
+                            Icons.location_off_rounded,
+                            size: 50,
+                            color: Colors.grey,
                           ),
-                          Positioned(
-                              top: 0,
-                              width: width,
-                              height: height,
-                              child: SizedBox(
-                                  child: SizedOverflowBox(
-                                      size: Size(width, height),
-                                      alignment: Alignment.center,
-                                      child: CameraPreview(controller!)))),
                           const SizedBox(height: 20),
-                          Positioned(
-                            bottom: 40,
-                            left: width / 2 - 32,
-                            child: IconButton(
-                                onPressed: () async {
-                                  if (captured) {
-                                    controller?.resumePreview();
-                                    setState(() {
-                                      captured = false;
-                                    });
-                                    return;
-                                  }
-                                  if (!await _capture()) {
-                                    CustomToast.showErrorToast(
-                                        "Unable to capture image!");
-                                  }
-                                },
-                                icon: Icon(
-                                  captured
-                                      ? BootstrapIcons.arrow_counterclockwise
-                                      : Icons.camera,
-                                  size: 50,
-                                  color: const Color(0xff5BE7C4),
-                                )),
+                          Text(
+                            (snapshot.error as PermissionException).message,
+                            textAlign: TextAlign.center,
                           ),
-                          Positioned(
-                              top: MediaQuery.of(context).viewPadding.top + 10,
-                              left: 10,
-                              child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Icon(
-                                    Icons.arrow_back_ios_new_outlined,
-                                    size: 30,
-                                  ))),
+                          TextButton(
+                              onPressed: () {
+                                if (snapshot.error is PermissionException) {
+                                  print((snapshot.error as PermissionException)
+                                      .onPressed);
+                                  (snapshot.error as PermissionException)
+                                      .onPressed
+                                      ?.call();
+                                }
+                              },
+                              child: Text(
+                                  (snapshot.error as PermissionException)
+                                      .buttonTitle))
                         ],
                       ),
                     );
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
+                  }
+                  return controller == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
+                          width: width,
+                          height: height,
+                          child: Stack(
+                            children: [
+                              SizedBox(
+                                width: width,
+                                height: height,
+                              ),
+                              Positioned(
+                                  top: 0,
+                                  width: width,
+                                  height: height,
+                                  child: SizedBox(
+                                      child: SizedOverflowBox(
+                                          size: Size(width, height),
+                                          alignment: Alignment.center,
+                                          child: CameraPreview(controller!)))),
+                              const SizedBox(height: 20),
+                              Positioned(
+                                bottom: 40,
+                                left: width / 2 - 31,
+                                child: IconButton(
+                                    onPressed: () async {
+                                      if (captured) {
+                                        controller?.resumePreview();
+                                        setState(() {
+                                          captured = false;
+                                        });
+                                        return;
+                                      }
+                                      if (!await _capture()) {
+                                        CustomToast.showErrorToast(
+                                            "Unable to capture image!");
+                                      }
+                                    },
+                                    icon: capturing
+                                        ? CircularProgressIndicator(
+                                            color: const Color(0xff5BE7C4),
+                                          )
+                                        : Icon(
+                                            captured
+                                                ? BootstrapIcons
+                                                    .arrow_counterclockwise
+                                                : Icons.camera,
+                                            size: 50,
+                                            color: const Color(0xff5BE7C4),
+                                          )),
+                              )
+                            ],
+                          ),
+                        );
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+            Positioned(
+                top: MediaQuery.of(context).viewPadding.top + 10,
+                left: 10,
+                child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Icon(
+                      Icons.arrow_back_ios_new_outlined,
+                      size: 30,
+                    ))),
+          ],
         ));
   }
+}
+
+abstract class PermissionException implements Exception {
+  final String message;
+  final String buttonTitle;
+  final Function? onPressed;
+
+  PermissionException(this.message, this.buttonTitle, this.onPressed);
+
+  @override
+  String toString() {
+    return message;
+  }
+}
+
+class LocationServiceDisabledException extends PermissionException {
+  LocationServiceDisabledException(String message)
+      : super(message, "Enable Location Services",
+            Geolocator.openLocationSettings);
+}
+
+class LocationPermissionDeniedException extends PermissionException {
+  LocationPermissionDeniedException(String message, Function onPressed)
+      : super(message, "Grant Permissions", onPressed);
+}
+
+class LocationPermissionDeniedForeverException extends PermissionException {
+  LocationPermissionDeniedForeverException(String message, Function onPressed)
+      : super(message, "Grant Permissions", onPressed);
+}
+
+class CameraPermissionDeniedException extends PermissionException {
+  CameraPermissionDeniedException(String message, Function onPressed)
+      : super(message, "Grant Permissions", onPressed);
+}
+
+class CameraPermissionDeniedForeverException extends PermissionException {
+  CameraPermissionDeniedForeverException(String message, Function onPressed)
+      : super(message, "Grant Permissions", onPressed);
 }
