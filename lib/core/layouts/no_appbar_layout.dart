@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class NoAppBarLayout extends StatefulWidget {
-  const NoAppBarLayout({super.key, required this.child});
+  const NoAppBarLayout({super.key, required this.child, this.padding});
 
   final Widget child;
+  final double? padding;
 
   @override
   State<NoAppBarLayout> createState() => _NoAppBarLayoutState();
@@ -16,7 +17,10 @@ class _NoAppBarLayoutState extends State<NoAppBarLayout> {
     final double height = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top + height * 0.05),
+        padding: EdgeInsets.only(
+            top: widget.padding == null
+                ? MediaQuery.of(context).viewPadding.top + height * 0.05
+                : widget.padding!),
         child: widget.child,
       ),
     );

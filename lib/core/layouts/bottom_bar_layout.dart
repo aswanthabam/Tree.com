@@ -30,13 +30,14 @@ class _BottomBarLayoutState extends State<BottomBarLayout> {
       bottomNavigationBar: BottomNavigationBar(
         onTap: (int index) {
           setState(() {
-            currentIndex = index;
-            print(currentIndex);
+            if (index != 2) {
+              currentIndex = index;
+            }
           });
           if (index == 0) {
             Navigator.pushReplacementNamed(context, 'home');
           } else if (index == 1) {
-            Navigator.pushReplacementNamed(context, 'capture');
+            Navigator.pushNamed(context, 'capture');
           } else if (index == 2) {
             Navigator.pushReplacementNamed(context, 'profile');
           }

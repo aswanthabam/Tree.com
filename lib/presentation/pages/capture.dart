@@ -3,11 +3,15 @@ import 'dart:io';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:tree_com/core/layouts/bottom_bar_layout.dart';
+import 'package:tree_com/core/layouts/no_appbar_layout.dart';
+import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/core/utils/toast.dart';
 import 'package:tree_com/data/models/tree_model.dart';
 import 'package:tree_com/presentation/bloc/trees_bloc/trees_bloc.dart';
@@ -49,7 +53,307 @@ class _CapturePageState extends State<CapturePage> {
       if (event is TreesAddLoading) {
         CustomToast.showLoadingToast(context, "Adding tree...");
       }
+
+      if (event is TreesGetNearbyLoading) {
+        showModalBottomSheet(
+            showDragHandle: true,
+            isScrollControlled: true,
+            context: context,
+            builder: (context) {
+              return _getNearbyDialogSheet(context);
+            }).then((value) {
+          controller?.resumePreview();
+          setState(() {
+            captured = false;
+          });
+        });
+      }
+      if (event is TreesGetNearbySuccess) {}
     });
+  }
+
+  Widget _getAddTreeDialogSheet(context) {
+    final double width = MediaQuery.of(context).size.width;
+    return DraggableScrollableSheet(
+      expand: false,
+      builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Container(
+            height: 200,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              clipBehavior: Clip.none,
+              physics: ClampingScrollPhysics(),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Add a new tree",
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                          hintText: "Title",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(
+                          hintText: "Description",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Center(
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            image!,
+                            height: 200,
+                          )),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (titleController.text.isEmpty) {
+                          CustomToast.showErrorToast("Title is required!");
+                          return;
+                        }
+                        if (descriptionController.text.isEmpty) {
+                          CustomToast.showErrorToast(
+                              "Description is required!");
+                          return;
+                        }
+                        if (image == null) {
+                          CustomToast.showErrorToast("Image is required!");
+                          return;
+                        }
+                        treesBloc.add(AddTreeEvent(
+                            title: titleController.text,
+                            description: descriptionController.text,
+                            image: image!,
+                            latitude: currentLocation!.latitude,
+                            longitude: currentLocation!.longitude));
+                      },
+                      child: Container(
+                        width: width,
+                        height: 50,
+                        decoration: BoxDecoration(
+                            color: Color(0xff0D7194),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: const Center(
+                          child: Text(
+                            "Add Tree",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )),
+    );
+  }
+
+  Widget _getNearbyDialogSheet(context) {
+    final double width = MediaQuery.of(context).size.width;
+    return DraggableScrollableSheet(
+      expand: false,
+      builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Container(
+            height: 400,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              clipBehavior: Clip.none,
+              physics: ClampingScrollPhysics(),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                            showDragHandle: true,
+                            isScrollControlled: true,
+                            context: context,
+                            builder: (context) =>
+                                _getAddTreeDialogSheet(context));
+                      },
+                      child: Container(
+                        width: width,
+                        height: 50,
+                        decoration: BoxDecoration(
+                            color: Color(0xff0D7194),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: const Center(
+                          child: Text(
+                            "Add a new tree",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Text(
+                      "Existing trees in this location",
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    BlocBuilder<TreesBloc, TreesState>(
+                      builder: (context, state) {
+                        if (state is TreesGetNearbyLoading) {
+                          return Container(
+                            height: 350,
+                            child: Shimmer.fromColors(
+                              baseColor: Colors.grey[400]!,
+                              highlightColor: Colors.grey[500]!,
+                              child: ListView.builder(
+                                itemCount: 3,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Container(
+                                      height: 100,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        }
+                        if (state is TreesGetNearbyFailure) {
+                          return Center(child: Text(state.message));
+                        }
+                        if (state is TreesGetNearbySuccess) {
+                          treeCount = state.trees.length;
+                          treesNearby = state.trees;
+                          if (currentLocation == null) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          for (var element in treesNearby) {
+                            _calculateDistance(element, currentLocation!);
+                          }
+                          return Column(
+                              children: treesNearby.map((tree) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              height: 100,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey),
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(80),
+                                      child: Image.network(
+                                        API.getImageUrl(tree.imgUrl),
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          tree.title,
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                        tree.description == null
+                                            ? const SizedBox()
+                                            : Text(
+                                                tree.description ?? "",
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.black,
+                                                    fontWeight:
+                                                        FontWeight.w400),
+                                              ),
+                                        Text(
+                                          "Added By ${tree.addedBy.name}",
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade700,
+                                              fontWeight: FontWeight.w400),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Spacer(),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                            "${tree.distance.toStringAsFixed(2)} m",
+                                            style: const TextStyle(
+                                                fontSize: 15,
+                                                color: Colors.greenAccent,
+                                                fontWeight: FontWeight.w600)),
+                                      ],
+                                    )
+                                  ]),
+                            );
+                          }).toList());
+                        }
+                        return const Text(
+                            "Hu Huuu! You are awesome, you found out an ultra rare error!");
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )),
+    );
   }
 
   void _initCamera() async {
@@ -129,7 +433,6 @@ class _CapturePageState extends State<CapturePage> {
     }
     file.saveTo("${(await getTemporaryDirectory()).path}/temp.jpg");
     image = File("${(await getTemporaryDirectory()).path}/temp.jpg");
-    print(image);
     setState(() {
       captured = true;
     });
@@ -140,8 +443,8 @@ class _CapturePageState extends State<CapturePage> {
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
     final double height = MediaQuery.of(context).size.height;
-    return BottomBarLayout(
-        currentIndex: 1,
+    return NoAppBarLayout(
+        padding: 0,
         child: FutureBuilder(
           future: _setupLocationService(),
           builder: (context, snapshot) {
@@ -156,29 +459,26 @@ class _CapturePageState extends State<CapturePage> {
                   : SizedBox(
                       width: width,
                       height: height,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            const Text("Capture Photo",
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xff0D7194))),
-                            SizedBox(height: (height - width * 1.45) / 2 - 40),
-                            Center(
+                      child: Stack(
+                        children: [
+                          SizedBox(
+                            width: width,
+                            height: height,
+                          ),
+                          Positioned(
+                              top: 0,
+                              width: width,
+                              height: height,
                               child: SizedBox(
-                                  child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(30),
-                                      child: SizedOverflowBox(
-                                          size: Size(width * 0.9, width * 0.9),
-                                          alignment: Alignment.center,
-                                          child: CameraPreview(controller!)))),
-                            ),
-                            const SizedBox(height: 20),
-                            IconButton(
+                                  child: SizedOverflowBox(
+                                      size: Size(width, height),
+                                      alignment: Alignment.center,
+                                      child: CameraPreview(controller!)))),
+                          const SizedBox(height: 20),
+                          Positioned(
+                            bottom: 40,
+                            left: width / 2 - 32,
+                            child: IconButton(
                                 onPressed: () async {
                                   if (captured) {
                                     controller?.resumePreview();
@@ -197,259 +497,21 @@ class _CapturePageState extends State<CapturePage> {
                                       ? BootstrapIcons.arrow_counterclockwise
                                       : Icons.camera,
                                   size: 50,
-                                  color: const Color(0xff0D7194),
+                                  color: const Color(0xff5BE7C4),
                                 )),
-                            captured
-                                ? Column(
-                                    children: [
-                                      const SizedBox(
-                                        height: 20,
-                                      ),
-                                      Container(
-                                          width: width,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade100,
-                                          ),
-                                          child: const Center(
-                                              child: Icon(
-                                            BootstrapIcons.chevron_double_up,
-                                            size: 20,
-                                          ))),
-                                      Container(
-                                        width: width,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 20),
-                                            Text(
-                                              "Existing trees in this location",
-                                              style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.grey.shade700,
-                                                  fontWeight: FontWeight.w600),
-                                            ),
-                                            SizedBox(
-                                              width: width,
-                                              height: (treeCount > 3
-                                                      ? 3
-                                                      : treeCount) *
-                                                  120.0,
-                                              child: BlocBuilder<TreesBloc,
-                                                  TreesState>(
-                                                builder: (context, state) {
-                                                  if (state
-                                                      is TreesGetNearbyLoading) {
-                                                    return const Center(
-                                                        child:
-                                                            CircularProgressIndicator());
-                                                  }
-                                                  if (state
-                                                      is TreesGetNearbyFailure) {
-                                                    return Center(
-                                                        child: Text(
-                                                            state.message));
-                                                  }
-                                                  if (state
-                                                      is TreesGetNearbySuccess) {
-                                                    treeCount =
-                                                        state.trees.length;
-                                                    treesNearby = state.trees;
-                                                    if (currentLocation ==
-                                                        null) {
-                                                      return const Center(
-                                                          child:
-                                                              CircularProgressIndicator());
-                                                    }
-                                                    for (var element
-                                                        in treesNearby) {
-                                                      _calculateDistance(
-                                                          element,
-                                                          currentLocation!);
-                                                    }
-                                                    return ListView.builder(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 20),
-                                                        scrollDirection:
-                                                            Axis.vertical,
-                                                        itemCount: treeCount,
-                                                        itemBuilder:
-                                                            (context, index) {
-                                                          return Container(
-                                                            margin:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    bottom: 10),
-                                                            width: 100,
-                                                            height: 100,
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                                    horizontal:
-                                                                        10,
-                                                                    vertical:
-                                                                        10),
-                                                            decoration: BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            10),
-                                                                color: Colors
-                                                                    .grey),
-                                                            child: Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                                children: [
-                                                                  Column(
-                                                                    crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
-                                                                      Text(
-                                                                        treesNearby[index]
-                                                                            .title,
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                15,
-                                                                            color:
-                                                                                Colors.black,
-                                                                            fontWeight: FontWeight.w600),
-                                                                      ),
-                                                                      Text(
-                                                                        treesNearby[index].description ??
-                                                                            "",
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                12,
-                                                                            color:
-                                                                                Colors.black,
-                                                                            fontWeight: FontWeight.w400),
-                                                                      ),
-                                                                      Text(
-                                                                        treesNearby[index]
-                                                                            .addedBy
-                                                                            .name,
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                12,
-                                                                            color:
-                                                                                Colors.black,
-                                                                            fontWeight: FontWeight.w400),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  const SizedBox(
-                                                                      width:
-                                                                          10),
-                                                                  Column(
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .center,
-                                                                    children: [
-                                                                      Text(
-                                                                          "${treesNearby[index].distance.toStringAsFixed(2)} m",
-                                                                          style: const TextStyle(
-                                                                              fontSize: 15,
-                                                                              color: Colors.black,
-                                                                              fontWeight: FontWeight.w600)),
-                                                                    ],
-                                                                  )
-                                                                ]),
-                                                          );
-                                                        });
-                                                  }
-                                                  return const Text(
-                                                      "Hu Huuu! You are awesome, you found out an ultra rare error!");
-                                                },
-                                              ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                    context: context,
-                                                    builder:
-                                                        (context) =>
-                                                            AlertDialog(
-                                                              title: const Text(
-                                                                  "Add a new tree"),
-                                                              content: Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: [
-                                                                  image == null
-                                                                      ? const SizedBox()
-                                                                      : Image
-                                                                          .file(
-                                                                          image!,
-                                                                          height:
-                                                                              200,
-                                                                        ),
-                                                                  TextField(
-                                                                    controller:
-                                                                        titleController,
-                                                                    decoration: const InputDecoration(
-                                                                        hintText:
-                                                                            "Title"),
-                                                                  ),
-                                                                  TextField(
-                                                                    controller:
-                                                                        descriptionController,
-                                                                    decoration: const InputDecoration(
-                                                                        hintText:
-                                                                            "Description"),
-                                                                  ),
-                                                                  ElevatedButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        treesBloc.add(AddTreeEvent(
-                                                                            image:
-                                                                                image!,
-                                                                            title:
-                                                                                titleController.text,
-                                                                            description: descriptionController.text,
-                                                                            latitude: currentLocation!.latitude,
-                                                                            longitude: currentLocation!.longitude));
-                                                                      },
-                                                                      child: const Text(
-                                                                          "Add"))
-                                                                ],
-                                                              ),
-                                                            ));
-                                              },
-                                              child: Container(
-                                                width: width,
-                                                height: 50,
-                                                decoration: BoxDecoration(
-                                                    color: Color(0xff0D7194),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10)),
-                                                child: const Center(
-                                                  child: Text(
-                                                    "Add a new tree",
-                                                    style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : const SizedBox()
-                          ],
-                        ),
+                          ),
+                          Positioned(
+                              top: MediaQuery.of(context).viewPadding.top + 10,
+                              left: 10,
+                              child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Icon(
+                                    Icons.arrow_back_ios_new_outlined,
+                                    size: 30,
+                                  ))),
+                        ],
                       ),
                     );
             } else {

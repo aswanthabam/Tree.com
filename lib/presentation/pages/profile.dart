@@ -261,17 +261,28 @@ class _ProfilePageState extends State<ProfilePage> {
             Positioned(
                 bottom: 10,
                 right: 10,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                      color: Color(0xff5BE7C4),
-                      borderRadius: BorderRadius.circular(50)),
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit),
-                      const SizedBox(width: 10,),
-                      Text("Post", style: TextStyle(fontWeight: FontWeight.w600),),
-                    ],
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      padding: EdgeInsets.zero),
+                  onPressed: () {},
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                        color: Color(0xff5BE7C4),
+                        borderRadius: BorderRadius.circular(50)),
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          "Post",
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 ))
           ],

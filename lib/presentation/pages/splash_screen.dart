@@ -39,9 +39,9 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     if (accessToken != null) {
       API.fetchAccessToken();
-      Navigator.pushReplacementNamed(context, 'home');
+      Navigator.pushNamedAndRemoveUntil(context, 'home', (e) => true);
     } else {
-      Navigator.pushReplacementNamed(context, 'register');
+      Navigator.pushNamedAndRemoveUntil(context, 'register', (e) => true);
     }
   }
 
