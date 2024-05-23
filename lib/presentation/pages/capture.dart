@@ -187,10 +187,7 @@ class _CapturePageState extends State<CapturePage> {
                                     });
                                     return;
                                   }
-                                  bool sts = await _capture();
-                                  if (sts) {
-                                    // Navigator.pushNamed(context, 'home');
-                                  } else {
+                                  if (!await _capture()) {
                                     CustomToast.showErrorToast(
                                         "Unable to capture image!");
                                   }

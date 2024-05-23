@@ -32,3 +32,17 @@ final class UserLoggedInFailed extends UserState {
 
   UserLoggedInFailed(this.message);
 }
+
+final class UserProfileLoaded extends UserState {
+  final UserProfile userProfile;
+
+  UserProfileLoaded(this.userProfile);
+}
+
+final class UserProfileLoadingFailed extends UserState {
+  final String message;
+
+  UserProfileLoadingFailed(this.message);
+}
+
+final class UserProfileLoading extends UserState {}

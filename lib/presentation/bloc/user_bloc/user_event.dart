@@ -17,3 +17,9 @@ final class LoginUser extends UserEvent {
 
   LoginUser({required this.email, required this.password});
 }
+
+final class GetUserProfile extends UserEvent {
+  final String? username;
+
+  GetUserProfile(this.username);
+}

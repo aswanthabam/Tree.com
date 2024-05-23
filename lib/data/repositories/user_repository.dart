@@ -16,4 +16,8 @@ class UserRepository {
   Future<Either<TokenData, String>> login(String email, String password) async {
     return await _dataSource.login(email, password);
   }
+
+  Future<Either<UserProfile, String>> getUserProfile(String? username) async {
+    return await _dataSource.getUserProfile(username);
+  }
 }

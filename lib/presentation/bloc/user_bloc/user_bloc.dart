@@ -35,5 +35,15 @@ class UserBloc extends Bloc<UserEvent, UserState> {
         );
       });
     });
+
+    on<GetUserProfile>((event, emit) async {
+      emit(UserProfileLoading());
+      await _repository.getUserProfile(event.username).then((result) {
+        result.fold(
+          (userProfile) => emit(UserProfileLoaded(userProfile)),
+          (message) => emit(UserProfileLoadingFailed(message)),
+        );
+      });
+    });
   }
 }

@@ -8,12 +8,14 @@ import 'package:tree_com/core/utils/preferences.dart';
 
 class API {
   static String apiUrl = 'https://treecom.vercel.app';
+
   // static String apiUrl = 'http://10.0.2.2:8000';
   static String? accessToken;
-  final Map<String, String> headers = {};
+  static final Map<String, String> headers = {};
 
   static void fetchAccessToken() async {
     API.accessToken = await AppPreferences.accessToken;
+    headers['Authorization'] = 'Bearer $accessToken';
   }
 
   static void setAPIUrl(String url) {
@@ -97,6 +99,10 @@ class API {
         hasError: data['has_error'],
         message: data['message'],
         data: data['data']);
+  }
+
+  static String getImageUrl(String imgUrl) {
+    return API.apiUrl + imgUrl;
   }
 }
 

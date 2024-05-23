@@ -19,12 +19,22 @@ class UserDataSource {
   }
 
   Future<Either<TokenData, String>> login(String email, String password) async {
-    final response = await api.post('user/login', {'email': email, 'password': password});
+    final response =
+        await api.post('user/login', {'email': email, 'password': password});
     print(response);
     if (response.hasError || response.data['accessToken'] == null) {
       return Right(response.message);
     }
     return Left(
         TokenData(accessToken: response.data['accessToken'], email: email));
+  }
+
+  Future<Either<UserProfile, String>> getUserProfile(String? username) async {
+    final response = await api.post(
+        'user/profile', username == null ? {} : {'username': username});
+    if (response.hasError) {
+      return Right(response.message);
+    }
+    return Left(UserProfile.fromJson(response.data));
   }
 }
