@@ -397,7 +397,7 @@ class _CapturePageState extends State<CapturePage> {
 
   Future<Position?> _getCurrentLocation() async {
     currentLocation = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best);
     setState(() {});
     return currentLocation;
   }
@@ -551,11 +551,18 @@ class _CapturePageState extends State<CapturePage> {
                                   top: 0,
                                   width: width,
                                   height: height,
-                                  child: SizedBox(
-                                      child: SizedOverflowBox(
-                                          size: Size(width, height),
-                                          alignment: Alignment.center,
-                                          child: CameraPreview(controller!)))),
+                                  child: ClipRect(
+                                    clipper: _MediaSizeClipper(
+                                        MediaQuery.of(context).size),
+                                    child: Transform.scale(
+                                        scale: 1 /
+                                            (controller!.value.aspectRatio *
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .aspectRatio),
+                                        alignment: Alignment.center,
+                                        child: CameraPreview(controller!)),
+                                  )),
                               const SizedBox(height: 20),
                               Positioned(
                                 bottom: 40,
@@ -608,6 +615,22 @@ class _CapturePageState extends State<CapturePage> {
                     ))),
           ],
         ));
+  }
+}
+
+class _MediaSizeClipper extends CustomClipper<Rect> {
+  final Size mediaSize;
+
+  const _MediaSizeClipper(this.mediaSize);
+
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) {
+    return true;
   }
 }
 
