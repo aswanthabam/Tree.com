@@ -565,34 +565,67 @@ class _CapturePageState extends State<CapturePage> {
                                   )),
                               const SizedBox(height: 20),
                               Positioned(
-                                bottom: 40,
-                                left: width / 2 - 31,
-                                child: IconButton(
-                                    onPressed: () async {
-                                      if (captured) {
-                                        controller?.resumePreview();
-                                        setState(() {
-                                          captured = false;
-                                        });
-                                        return;
-                                      }
-                                      if (!await _capture()) {
-                                        CustomToast.showErrorToast(
-                                            "Unable to capture image!");
-                                      }
-                                    },
-                                    icon: capturing
-                                        ? CircularProgressIndicator(
-                                            color: const Color(0xff5BE7C4),
-                                          )
-                                        : Icon(
-                                            captured
-                                                ? BootstrapIcons
-                                                    .arrow_counterclockwise
-                                                : Icons.camera,
-                                            size: 50,
-                                            color: const Color(0xff5BE7C4),
-                                          )),
+                                bottom: 0,
+                                left: 0,
+                                child: Container(
+                                  width: width,
+                                  height: height * 0.15,
+                                  color: Colors.black.withOpacity(0.4),
+                                  child: Center(
+                                    child: IconButton(
+                                        onPressed: () async {
+                                          if (captured) {
+                                            controller?.resumePreview();
+                                            setState(() {
+                                              captured = false;
+                                            });
+                                            return;
+                                          }
+                                          if (!await _capture()) {
+                                            CustomToast.showErrorToast(
+                                                "Unable to capture image!");
+                                          }
+                                        },
+                                        icon: capturing
+                                            ? CircularProgressIndicator(
+                                                color: const Color(0xff5BE7C4),
+                                              )
+                                            : Icon(
+                                                captured
+                                                    ? BootstrapIcons
+                                                        .arrow_counterclockwise
+                                                    : Icons.camera,
+                                                size: 50,
+                                                color: const Color(0xff5BE7C4),
+                                              )),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                child: Container(
+                                  width: width,
+                                  height:
+                                      MediaQuery.of(context).viewPadding.top +
+                                          height * 0.07,
+                                  color: Colors.greenAccent.withOpacity(0.4),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                          top: MediaQuery.of(context)
+                                              .viewPadding
+                                              .top),
+                                      child: Text(
+                                        "Capture a tree",
+                                        style: TextStyle(
+                                            color: Colors.blueGrey,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               )
                             ],
                           ),
