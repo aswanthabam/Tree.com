@@ -138,11 +138,6 @@ class _CapturePageState extends State<CapturePage> {
                           CustomToast.showErrorToast("Title is required!");
                           return;
                         }
-                        if (descriptionController.text.isEmpty) {
-                          CustomToast.showErrorToast(
-                              "Description is required!");
-                          return;
-                        }
                         if (image == null) {
                           CustomToast.showErrorToast("Image is required!");
                           return;
