@@ -51,5 +51,17 @@ class TreesBloc extends Bloc<TreesEvent, TreesState> {
         );
       });
     });
+
+    on<VisitedPicsEvent>((event, emit) async {
+      emit(TreesVisitedPicsLoading());
+      await _repository
+          .visitedPics(event.treeId)
+          .then((response) {
+        response.fold(
+          (visits) => emit(TreesVisitedPicsSuccess(visits)),
+          (error) => emit(TreesVisitedPicsFailure(error)),
+        );
+      });
+    });
   }
 }

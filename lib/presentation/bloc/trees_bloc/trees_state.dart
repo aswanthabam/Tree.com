@@ -5,7 +5,6 @@ sealed class TreesState {}
 
 final class TreesInitial extends TreesState {}
 
-
 final class TreesAddLoading extends TreesState {}
 
 final class TreesAddSuccess extends TreesState {
@@ -46,4 +45,18 @@ final class TreesVisitFailure extends TreesState {
   final String message;
 
   TreesVisitFailure(this.message);
+}
+
+final class TreesVisitedPicsLoading extends TreesState {}
+
+final class TreesVisitedPicsSuccess extends TreesState {
+  final List<TreeVisit> visits;
+
+  TreesVisitedPicsSuccess(this.visits);
+}
+
+final class TreesVisitedPicsFailure extends TreesState {
+  final String message;
+
+  TreesVisitedPicsFailure(this.message);
 }

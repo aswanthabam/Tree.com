@@ -41,3 +41,11 @@ final class VisitTreeEvent extends TreesEvent {
     this.content,
   });
 }
+
+final class VisitedPicsEvent extends TreesEvent {
+  final String treeId;
+
+  VisitedPicsEvent({
+    required this.treeId,
+  });
+}

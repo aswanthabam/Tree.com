@@ -101,7 +101,9 @@ class _ProfilePageState extends State<ProfilePage>
         Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (context, anim1, anim2) => const StoryViewer(),
+              pageBuilder: (context, anim1, anim2) => StoryViewer(
+                treeInfo: tree,
+              ),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                 var begin = 0.0;
@@ -187,14 +189,20 @@ class _ProfilePageState extends State<ProfilePage>
         currentIndex: 2,
         child: Stack(
           children: [
-            SizedBox(width: width,height: height,),
+            SizedBox(
+              width: width,
+              height: height,
+            ),
             SingleChildScrollView(
               child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: BlocBuilder<UserBloc, UserState>(
                       builder: (context, state) {
                     if (state is UserProfileLoading) {
-                      return SizedBox(height: height - 100, child: Center(child: const CircularProgressIndicator()));
+                      return SizedBox(
+                          height: height - 100,
+                          child:
+                              Center(child: const CircularProgressIndicator()));
                     }
                     if (state is UserProfileLoadingFailed) {
                       return Text(state.message);

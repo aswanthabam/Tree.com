@@ -70,3 +70,27 @@ final class TreeInfo {
     );
   }
 }
+
+
+final class TreeVisit {
+  final String treeId;
+  final String? content;
+  final String imageUrl;
+  final DateTime time;
+
+  TreeVisit({
+    required this.treeId,
+    required this.content,
+    required this.imageUrl,
+  required this.time
+  });
+
+  factory TreeVisit.fromJson(Map<String, dynamic> json) {
+    return TreeVisit(
+      treeId: json['tree_id'],
+      content: json['content'],
+      imageUrl: json['image_url'],
+      time: DateTime.parse(json['time']),
+    );
+  }
+}

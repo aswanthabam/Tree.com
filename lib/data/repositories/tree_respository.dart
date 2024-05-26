@@ -26,4 +26,8 @@ class TreeRepository {
   }
 
 
+  Future<Either<List<TreeVisit>, String>> visitedPics(String treeId) async {
+    return await dataSource.visitedPics(treeId);
+  }
+
 }

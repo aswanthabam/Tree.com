@@ -47,4 +47,15 @@ class TreesDataSource {
     }
     return Left(response.message);
   }
+
+  Future<Either<List<TreeVisit>, String>> visitedPics(String treeId) async {
+    final response = await api.post('trees/visited-pics', {'tree_id': treeId});
+    if (response.hasError) {
+      return Right(response.message);
+    }
+    final visits = response.data['pics']
+        .map<TreeVisit>((visit) => TreeVisit.fromJson(visit))
+        .toList();
+    return Left(visits);
+  }
 }
