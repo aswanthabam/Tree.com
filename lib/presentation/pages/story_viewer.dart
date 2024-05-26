@@ -45,7 +45,6 @@ class _StoryViewerState extends State<StoryViewer> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
     return NoAppBarLayout(
         padding: 0,
         child: Container(

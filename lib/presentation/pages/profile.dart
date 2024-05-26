@@ -17,9 +17,9 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with TickerProviderStateMixin {
   late UserBloc userBloc;
-  late OverlayEntry _overlayEntry;
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  // late OverlayEntry _overlayEntry;
+  // late AnimationController _controller;
+  // late Animation<double> _animation;
 
   @override
   void initState() {
@@ -27,73 +27,73 @@ class _ProfilePageState extends State<ProfilePage>
     userBloc = context.read<UserBloc>();
     userBloc.add(GetUserProfile(null));
   }
-
-  OverlayEntry _createOverlayEntry(BuildContext context, Offset tapPosition) {
-    return OverlayEntry(
-      builder: (context) => AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          double radius = 0;
-          if (_animation.value < 1.0) {
-            radius = 50 * _animation.value +
-                MediaQuery.of(context).size.width * (1 - _animation.value);
-          } else {
-            radius = MediaQuery.of(context).size.width;
-          }
-
-          return Positioned(
-            left: tapPosition.dx - radius / 2,
-            top: tapPosition.dy - radius / 2,
-            width: radius,
-            height: radius,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent,
-                  shape: BoxShape.circle,
-                ),
-                child: _animation.value == 1.0
-                    ? Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            _controller.reverse().then((_) {
-                              _overlayEntry.remove();
-                            });
-                          },
-                          child: Text(
-                            'Close',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Container(),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showPopup(BuildContext context, Offset tapPosition) {
-    _controller = AnimationController(
-      duration: Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-
-    _overlayEntry = _createOverlayEntry(context, tapPosition);
-    Overlay.of(context).insert(_overlayEntry);
-    _controller.forward();
-  }
+  //
+  // OverlayEntry _createOverlayEntry(BuildContext context, Offset tapPosition) {
+  //   return OverlayEntry(
+  //     builder: (context) => AnimatedBuilder(
+  //       animation: _animation,
+  //       builder: (context, child) {
+  //         double radius = 0;
+  //         if (_animation.value < 1.0) {
+  //           radius = 50 * _animation.value +
+  //               MediaQuery.of(context).size.width * (1 - _animation.value);
+  //         } else {
+  //           radius = MediaQuery.of(context).size.width;
+  //         }
+  //
+  //         return Positioned(
+  //           left: tapPosition.dx - radius / 2,
+  //           top: tapPosition.dy - radius / 2,
+  //           width: radius,
+  //           height: radius,
+  //           child: Material(
+  //             color: Colors.transparent,
+  //             child: Container(
+  //               decoration: BoxDecoration(
+  //                 color: Colors.blueAccent,
+  //                 shape: BoxShape.circle,
+  //               ),
+  //               child: _animation.value == 1.0
+  //                   ? Center(
+  //                       child: GestureDetector(
+  //                         onTap: () {
+  //                           _controller.reverse().then((_) {
+  //                             _overlayEntry.remove();
+  //                           });
+  //                         },
+  //                         child: Text(
+  //                           'Close',
+  //                           style: TextStyle(
+  //                             color: Colors.white,
+  //                             fontSize: 24,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     )
+  //                   : Container(),
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
+  //
+  // void _showPopup(BuildContext context, Offset tapPosition) {
+  //   _controller = AnimationController(
+  //     duration: Duration(milliseconds: 500),
+  //     vsync: this,
+  //   );
+  //
+  //   _animation = CurvedAnimation(
+  //     parent: _controller,
+  //     curve: Curves.easeInOut,
+  //   );
+  //
+  //   _overlayEntry = _createOverlayEntry(context, tapPosition);
+  //   Overlay.of(context).insert(_overlayEntry);
+  //   _controller.forward();
+  // }
 
   Widget _getStoryCard(TreeInfo tree) {
     return GestureDetector(
