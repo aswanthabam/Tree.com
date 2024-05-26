@@ -32,8 +32,10 @@ class _CapturePageState extends State<CapturePage> {
   Position? currentLocation;
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
+  TextEditingController contentController = TextEditingController();
   File? image;
   bool capturing = false;
+  int dialogCount = 0;
   late Future<void> _future;
 
   @override
@@ -44,6 +46,7 @@ class _CapturePageState extends State<CapturePage> {
       if (event is TreesAddSuccess) {
         CustomToast.hideLoadingToast(context);
         CustomToast.showSuccessToast("Tree added successfully!");
+        _dismissDialogs(context);
       }
       if (event is TreesAddFailure) {
         CustomToast.hideLoadingToast(context);
@@ -55,6 +58,7 @@ class _CapturePageState extends State<CapturePage> {
       }
 
       if (event is TreesGetNearbyLoading) {
+        dialogCount++;
         showModalBottomSheet(
             showDragHandle: true,
             isScrollControlled: true,
@@ -62,6 +66,7 @@ class _CapturePageState extends State<CapturePage> {
             builder: (context) {
               return _getNearbyDialogSheet(context);
             }).then((value) {
+          if (dialogCount > 0) dialogCount--;
           controller?.resumePreview();
           setState(() {
             captured = false;
@@ -81,6 +86,7 @@ class _CapturePageState extends State<CapturePage> {
       if (event is TreesVisitSuccess) {
         CustomToast.hideLoadingToast(context);
         CustomToast.showSuccessToast("Tree visited successfully!");
+        _dismissDialogs(context);
       }
 
       if (event is TreesVisitFailure) {
@@ -89,6 +95,13 @@ class _CapturePageState extends State<CapturePage> {
       }
     });
     _future = _setupServices();
+  }
+
+  void _dismissDialogs(BuildContext context) {
+    while (dialogCount > 0) {
+      Navigator.pop(context);
+      dialogCount--;
+    }
   }
 
   Widget _getAddTreeDialogSheet(context) {
@@ -129,12 +142,18 @@ class _CapturePageState extends State<CapturePage> {
                     const SizedBox(
                       height: 20,
                     ),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: InputDecoration(
-                          hintText: "Description",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10))),
+                    SizedBox(
+                      height: 100,
+                      child: TextField(
+                        expands: true,
+                        maxLines: null,
+                        textAlignVertical: TextAlignVertical.top,
+                        controller: descriptionController,
+                        decoration: InputDecoration(
+                            hintText: "Write your thoughts here ...",
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                      ),
                     ),
                     const SizedBox(
                       height: 20,
@@ -192,24 +211,97 @@ class _CapturePageState extends State<CapturePage> {
     );
   }
 
-  Widget _getVisitTreeDialog(context) {
-    return AlertDialog(
-      title: Text("Visit Tree"),
-      content: Text("Are you sure you visited this tree?"),
-      actions: [
-        TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text("Cancel")),
-        TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              treesBloc.add(VisitTreeEvent(
-                  image: image!, treeId: treesNearby[0].treeId, content: null));
-            },
-            child: Text("Yes"))
-      ],
+  Widget _getVisitTreeDialog(context, String treeId) {
+    final width = MediaQuery.of(context).size.width;
+    return DraggableScrollableSheet(
+      expand: false,
+      builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Container(
+            height: 200,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              clipBehavior: Clip.none,
+              physics: ClampingScrollPhysics(),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Visit Tree",
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    SizedBox(
+                      height: 150,
+                      child: TextField(
+                        onTapOutside: (w) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        textAlignVertical: TextAlignVertical.top,
+                        controller: contentController,
+                        expands: true,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                            hintText: "Write your thoughts here ...",
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Center(
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            image!,
+                            height: 200,
+                          )),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (image == null) {
+                          CustomToast.showErrorToast("Image is required!");
+                          return;
+                        }
+                        treesBloc.add(VisitTreeEvent(
+                            image: image!,
+                            treeId: treeId,
+                            content: contentController.text));
+                      },
+                      child: Container(
+                        width: width,
+                        height: 50,
+                        decoration: BoxDecoration(
+                            color: Color(0xff0D7194),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: const Center(
+                          child: Text(
+                            "Visit Tree",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )),
     );
   }
 
@@ -233,12 +325,16 @@ class _CapturePageState extends State<CapturePage> {
                   children: [
                     GestureDetector(
                       onTap: () {
+                        dialogCount++;
                         showModalBottomSheet(
                             showDragHandle: true,
                             isScrollControlled: true,
                             context: context,
                             builder: (context) =>
-                                _getAddTreeDialogSheet(context));
+                                _getAddTreeDialogSheet(context)).then((v) {
+                          if (dialogCount > 0) dialogCount--;
+                        });
+                        ;
                       },
                       child: Container(
                         width: width,
@@ -310,10 +406,15 @@ class _CapturePageState extends State<CapturePage> {
                             children: treesNearby.map((tree) {
                           return GestureDetector(
                             onTap: () {
-                              showDialog(
+                              dialogCount++;
+                              showModalBottomSheet(
+                                  showDragHandle: true,
+                                  isScrollControlled: true,
                                   context: context,
-                                  builder: (context) =>
-                                      _getVisitTreeDialog(context));
+                                  builder: (context) => _getVisitTreeDialog(
+                                      context, tree.treeId)).then((v) {
+                                if (dialogCount > 0) dialogCount--;
+                              });
                             },
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 10),
@@ -352,13 +453,18 @@ class _CapturePageState extends State<CapturePage> {
                                         ),
                                         tree.description == null
                                             ? const SizedBox()
-                                            : Text(
-                                                tree.description ?? "",
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.black,
-                                                    fontWeight:
-                                                        FontWeight.w400),
+                                            : SizedBox(
+                                                width: width - 170,
+                                                child: Text(
+                                                  tree.description ?? "",
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w400),
+                                                ),
                                               ),
                                         Text(
                                           "Added By ${tree.addedBy.name}",

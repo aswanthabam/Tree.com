@@ -34,6 +34,7 @@ class _StoryViewerState extends State<StoryViewer> {
       if (event is TreesVisitedPicsSuccess) {
         setState(() {
           visits = event.visits;
+          print(visits[visits.length - 1]);
           print(visits);
         });
       }
@@ -48,6 +49,13 @@ class _StoryViewerState extends State<StoryViewer> {
     return NoAppBarLayout(
         padding: 0,
         child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black, Colors.grey],
+            ),
+          ),
           child: Stack(children: [
             Positioned.fill(child: BlocBuilder<TreesBloc, TreesState>(
               builder: (context, state) {
@@ -97,14 +105,23 @@ class _StoryViewerState extends State<StoryViewer> {
             visits[index].content != null
                 ? Positioned(
                     bottom: 0,
-                    child: Container(
-                      width: width,
-                      color: Colors.black.withOpacity(0.5),
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        visits[index].content!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: width,
+                          padding: const EdgeInsets.only(
+                              bottom: 60, top: 10, left: 10, right: 10),
+                          height: 200,
+                          color: Colors.black.withOpacity(0.2),
+                          child: SingleChildScrollView(
+                            child: Text(
+                              visits[index].content!,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 17),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : const SizedBox(),

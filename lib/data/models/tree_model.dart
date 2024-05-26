@@ -71,19 +71,17 @@ final class TreeInfo {
   }
 }
 
-
 final class TreeVisit {
   final String treeId;
   final String? content;
   final String imageUrl;
   final DateTime time;
 
-  TreeVisit({
-    required this.treeId,
-    required this.content,
-    required this.imageUrl,
-  required this.time
-  });
+  TreeVisit(
+      {required this.treeId,
+      required this.content,
+      required this.imageUrl,
+      required this.time});
 
   factory TreeVisit.fromJson(Map<String, dynamic> json) {
     return TreeVisit(
@@ -92,5 +90,10 @@ final class TreeVisit {
       imageUrl: json['image_url'],
       time: DateTime.parse(json['time']),
     );
+  }
+
+  @override
+  String toString() {
+    return 'TreeVisit{treeId: $treeId, content: $content, imageUrl: $imageUrl, time: $time}';
   }
 }
