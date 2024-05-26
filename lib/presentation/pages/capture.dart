@@ -69,6 +69,24 @@ class _CapturePageState extends State<CapturePage> {
         });
       }
       if (event is TreesGetNearbySuccess) {}
+
+      if (event is TreesGetNearbyFailure) {
+        CustomToast.showErrorToast(event.message);
+      }
+
+      if (event is TreesVisitLoading) {
+        CustomToast.showLoadingToast(context, "Visiting tree...");
+      }
+
+      if (event is TreesVisitSuccess) {
+        CustomToast.hideLoadingToast(context);
+        CustomToast.showSuccessToast("Tree visited successfully!");
+      }
+
+      if (event is TreesVisitFailure) {
+        CustomToast.hideLoadingToast(context);
+        CustomToast.showErrorToast(event.message);
+      }
     });
     _future = _setupServices();
   }
@@ -174,6 +192,27 @@ class _CapturePageState extends State<CapturePage> {
     );
   }
 
+  Widget _getVisitTreeDialog(context) {
+    return AlertDialog(
+      title: Text("Visit Tree"),
+      content: Text("Are you sure you visited this tree?"),
+      actions: [
+        TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Cancel")),
+        TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              treesBloc.add(VisitTreeEvent(
+                  image: image!, treeId: treesNearby[0].treeId, content: null));
+            },
+            child: Text("Yes"))
+      ],
+    );
+  }
+
   Widget _getNearbyDialogSheet(context) {
     final double width = MediaQuery.of(context).size.width;
     return DraggableScrollableSheet(
@@ -266,9 +305,17 @@ class _CapturePageState extends State<CapturePage> {
                           for (var element in treesNearby) {
                             _calculateDistance(element, currentLocation!);
                           }
-                          return Column(
-                              children: treesNearby.map((tree) {
-                            return Container(
+                        }
+                        return Column(
+                            children: treesNearby.map((tree) {
+                          return GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      _getVisitTreeDialog(context));
+                            },
+                            child: Container(
                               margin: const EdgeInsets.only(bottom: 10),
                               height: 100,
                               padding: const EdgeInsets.symmetric(
@@ -337,11 +384,9 @@ class _CapturePageState extends State<CapturePage> {
                                       ],
                                     )
                                   ]),
-                            );
-                          }).toList());
-                        }
-                        return const Text(
-                            "Hu Huuu! You are awesome, you found out an ultra rare error!");
+                            ),
+                          );
+                        }).toList());
                       },
                     ),
                   ],

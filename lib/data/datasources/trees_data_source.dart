@@ -30,10 +30,21 @@ class TreesDataSource {
     if (response.hasError) {
       return Right(response.message);
     }
-    print(response);
     final trees = response.data['trees']
         .map<NearbyTree>((tree) => NearbyTree.fromJson(tree))
         .toList();
     return Left(trees);
+  }
+
+  Future<Either<String, String>> visitTree(
+      File image, String treeId, String? content) async {
+    final response = await api.postImage('trees/visit', image, {
+      'content': content,
+      'tree_id': treeId,
+    });
+    if (response.hasError) {
+      return Right(response.message);
+    }
+    return Left(response.message);
   }
 }

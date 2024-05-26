@@ -19,4 +19,11 @@ class TreeRepository {
       double latitude, double longitude) async {
     return await dataSource.getNearbyTrees(latitude, longitude);
   }
+
+  Future<Either<String, String>> visitTree(
+      File image, String treeId, String? content) async {
+    return await dataSource.visitTree(image, treeId, content);
+  }
+
+
 }

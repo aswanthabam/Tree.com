@@ -33,3 +33,17 @@ final class TreesGetNearbyFailure extends TreesState {
 
   TreesGetNearbyFailure(this.message);
 }
+
+final class TreesVisitLoading extends TreesState {}
+
+final class TreesVisitSuccess extends TreesState {
+  final String message;
+
+  TreesVisitSuccess(this.message);
+}
+
+final class TreesVisitFailure extends TreesState {
+  final String message;
+
+  TreesVisitFailure(this.message);
+}

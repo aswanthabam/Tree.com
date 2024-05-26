@@ -28,3 +28,16 @@ final class GetNearbyTreesEvent extends TreesEvent {
     required this.longitude,
   });
 }
+
+
+final class VisitTreeEvent extends TreesEvent {
+  final File image;
+  final String treeId;
+  final String? content;
+
+  VisitTreeEvent({
+    required this.image,
+    required this.treeId,
+    this.content,
+  });
+}

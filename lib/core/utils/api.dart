@@ -54,20 +54,22 @@ class API {
       var request = http.MultipartRequest('POST', Uri.parse("$apiUrl/$path"));
       request.headers.addAll(headers);
       body.forEach((key, value) {
-        request.fields[key] = value;
+        if (value != null) request.fields[key] = value;
       });
+      print("--------------------------------------------------------");
       var fileStream = http.ByteStream(file.openRead());
       var length = await file.length();
       var multipartFile = http.MultipartFile('image', fileStream, length,
           filename: file.path.split('/').last,
           contentType: MediaType(
               'image', 'jpeg')); // Adjust the content type accordingly
-
+      print(request);
       request.files.add(multipartFile);
       var response = await request.send();
       var responseString = await response.stream.bytesToString();
       return getResponse(responseString);
     } catch (e) {
+      print(e);
       return APIResponse(hasError: true, message: e.toString(), data: {});
     }
   }
