@@ -17,7 +17,7 @@ class CaptureWidget extends StatefulWidget {
       this.location = false});
 
   final bool location;
-  final Future<bool> Function(File image) onCapture;
+  final Future<bool> Function(File image, Position? location) onCapture;
   final String title;
 
   @override
@@ -139,7 +139,8 @@ class _CaptureWidgetState extends State<CaptureWidget> {
       capturing = false;
       captured = true;
     });
-    return await widget.onCapture(image!);
+    return await widget.onCapture(
+        image!, widget.location ? await Geolocator.getCurrentPosition() : null);
   }
 
   @override

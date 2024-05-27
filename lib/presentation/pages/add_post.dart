@@ -55,7 +55,7 @@ class _AddPostPageState extends State<AddPostPage> {
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         CaptureWidget(
                           title: "Take a picture",
-                          onCapture: (file) async {
+                          onCapture: (file, location) async {
                             setState(() {
                               imageFile = file;
                             });
