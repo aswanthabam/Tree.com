@@ -144,7 +144,7 @@ class _AddPostPageState extends State<AddPostPage> {
                       .add(AddPostEvent(imageFile, contentController.text));
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.blue,
+                  backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
