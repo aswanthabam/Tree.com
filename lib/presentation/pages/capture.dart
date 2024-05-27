@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -134,6 +133,9 @@ class _CapturePageState extends State<CapturePage> {
                     ),
                     TextField(
                       controller: titleController,
+                      onTapOutside: (e) {
+                        FocusScope.of(context).unfocus();
+                      },
                       decoration: InputDecoration(
                           hintText: "Title",
                           border: OutlineInputBorder(
@@ -148,6 +150,9 @@ class _CapturePageState extends State<CapturePage> {
                         expands: true,
                         maxLines: null,
                         textAlignVertical: TextAlignVertical.top,
+                        onTapOutside: (e) {
+                          FocusScope.of(context).unfocus();
+                        },
                         controller: descriptionController,
                         decoration: InputDecoration(
                             hintText: "Write your thoughts here ...",
