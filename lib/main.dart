@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tree_com/core/theme/app_theme.dart';
+import 'package:tree_com/data/datasources/posts_data_source.dart';
 import 'package:tree_com/data/datasources/trees_data_source.dart';
+import 'package:tree_com/data/repositories/posts_repository.dart';
 import 'package:tree_com/data/repositories/tree_respository.dart';
+import 'package:tree_com/presentation/bloc/posts_bloc/posts_bloc.dart';
 import 'package:tree_com/presentation/bloc/trees_bloc/trees_bloc.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
+import 'package:tree_com/presentation/pages/add_post.dart';
 import 'package:tree_com/presentation/pages/capture.dart';
 import 'package:tree_com/presentation/pages/home.dart';
 import 'package:tree_com/presentation/pages/login.dart';
@@ -41,6 +45,15 @@ void main() async {
             ),
           ),
         ),
+        BlocProvider<PostsBloc>(
+          create: (context) => PostsBloc(
+            repository: PostsRepository(
+              PostsDataSource(
+                API(),
+              ),
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -53,5 +66,6 @@ void main() async {
             'profile': (context) => const ProfilePage(),
             'splash_screen': (context) => const SplashScreen(),
             'capture': (context) => const CapturePage(),
+            'add_post': (context) => const AddPostPage(),
           })));
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tree_com/core/layouts/bottom_bar_layout.dart';
 import 'package:tree_com/core/utils/api.dart';
 import 'package:tree_com/data/models/tree_model.dart';
+import 'package:tree_com/presentation/bloc/posts_bloc/posts_bloc.dart';
 import 'package:tree_com/presentation/bloc/user_bloc/user_bloc.dart';
 import 'package:tree_com/presentation/pages/settings.dart';
 import 'package:tree_com/presentation/pages/story_viewer.dart';
@@ -17,83 +18,16 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with TickerProviderStateMixin {
   late UserBloc userBloc;
-  // late OverlayEntry _overlayEntry;
-  // late AnimationController _controller;
-  // late Animation<double> _animation;
+  late PostsBloc postsBloc;
 
   @override
   void initState() {
     super.initState();
     userBloc = context.read<UserBloc>();
+    postsBloc = context.read<PostsBloc>();
     userBloc.add(GetUserProfile(null));
+    postsBloc.add(GetPostsEvent(null));
   }
-  //
-  // OverlayEntry _createOverlayEntry(BuildContext context, Offset tapPosition) {
-  //   return OverlayEntry(
-  //     builder: (context) => AnimatedBuilder(
-  //       animation: _animation,
-  //       builder: (context, child) {
-  //         double radius = 0;
-  //         if (_animation.value < 1.0) {
-  //           radius = 50 * _animation.value +
-  //               MediaQuery.of(context).size.width * (1 - _animation.value);
-  //         } else {
-  //           radius = MediaQuery.of(context).size.width;
-  //         }
-  //
-  //         return Positioned(
-  //           left: tapPosition.dx - radius / 2,
-  //           top: tapPosition.dy - radius / 2,
-  //           width: radius,
-  //           height: radius,
-  //           child: Material(
-  //             color: Colors.transparent,
-  //             child: Container(
-  //               decoration: BoxDecoration(
-  //                 color: Colors.blueAccent,
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: _animation.value == 1.0
-  //                   ? Center(
-  //                       child: GestureDetector(
-  //                         onTap: () {
-  //                           _controller.reverse().then((_) {
-  //                             _overlayEntry.remove();
-  //                           });
-  //                         },
-  //                         child: Text(
-  //                           'Close',
-  //                           style: TextStyle(
-  //                             color: Colors.white,
-  //                             fontSize: 24,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     )
-  //                   : Container(),
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
-  //
-  // void _showPopup(BuildContext context, Offset tapPosition) {
-  //   _controller = AnimationController(
-  //     duration: Duration(milliseconds: 500),
-  //     vsync: this,
-  //   );
-  //
-  //   _animation = CurvedAnimation(
-  //     parent: _controller,
-  //     curve: Curves.easeInOut,
-  //   );
-  //
-  //   _overlayEntry = _createOverlayEntry(context, tapPosition);
-  //   Overlay.of(context).insert(_overlayEntry);
-  //   _controller.forward();
-  // }
 
   Widget _getStoryCard(TreeInfo tree) {
     return GestureDetector(
@@ -466,7 +400,9 @@ class _ProfilePageState extends State<ProfilePage>
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       padding: EdgeInsets.zero),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, 'add_post');
+                  },
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
