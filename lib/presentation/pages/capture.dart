@@ -40,6 +40,7 @@ class _CapturePageState extends State<CapturePage> {
   @override
   void initState() {
     super.initState();
+    BuildContext mainContext = context;
     treesBloc = context.read<TreesBloc>();
     treesBloc.stream.listen((event) {
       if (event is TreesAddSuccess) {
@@ -61,7 +62,7 @@ class _CapturePageState extends State<CapturePage> {
         showModalBottomSheet(
             showDragHandle: true,
             isScrollControlled: true,
-            context: context,
+            context: mainContext,
             builder: (context) {
               return _getNearbyDialogSheet(context);
             }).then((value) {
@@ -673,8 +674,6 @@ class _CapturePageState extends State<CapturePage> {
                           TextButton(
                               onPressed: () {
                                 if (snapshot.error is PermissionException) {
-                                  print((snapshot.error as PermissionException)
-                                      .onPressed);
                                   (snapshot.error as PermissionException)
                                       .onPressed
                                       ?.call();
@@ -682,7 +681,15 @@ class _CapturePageState extends State<CapturePage> {
                               },
                               child: Text(
                                   (snapshot.error as PermissionException)
-                                      .buttonTitle))
+                                      .buttonTitle)),
+                          if (snapshot.error
+                              is LocationServiceDisabledException)
+                            TextButton(
+                                onPressed: () {
+                                  _future = _setupLocationService();
+                                  setState(() {});
+                                },
+                                child: Text("Refresh")),
                         ],
                       ),
                     );
