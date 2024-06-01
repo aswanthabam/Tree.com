@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -23,23 +23,22 @@ class _StoryViewerState extends State<StoryViewer> {
   List<TreeVisit> visits = [];
   int index = 0;
 
+  void safeSetState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
   @override
   void initState() {
+    super.initState();
     treesBloc = context.read<TreesBloc>();
     treesBloc.add(VisitedPicsEvent(treeId: widget.treeInfo.treeId));
-    treesBloc.stream.listen((event) {
+    treesBloc.stream.listen((event) async {
       if (event is TreesVisitedPicsFailure) {
         CustomToast.showErrorToast(event.message);
       }
-      if (event is TreesVisitedPicsSuccess) {
-        setState(() {
-          visits = event.visits;
-          print(visits[visits.length - 1]);
-          print(visits);
-        });
-      }
     });
-    super.initState();
   }
 
   @override
@@ -55,195 +54,214 @@ class _StoryViewerState extends State<StoryViewer> {
               colors: [Colors.black, Colors.grey],
             ),
           ),
-          child: visits.length > 0
-              ? Stack(children: [
-                  Positioned.fill(child: BlocBuilder<TreesBloc, TreesState>(
-                    builder: (context, state) {
-                      if (state is TreesVisitedPicsLoading) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (state is TreesVisitedPicsFailure) {
-                        return Center(child: Text(state.message));
-                      }
-                      if (visits.isEmpty) {
-                        return const Center(child: Text('No visits yet'));
-                      }
-                      return ImageFiltered(
-                          imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Image.network(
-                            visits[index].imageUrl,
-                            fit: BoxFit.cover,
-                          ));
-                    },
-                  )),
-                  Center(
-                    child: Image.network(
-                      visits[index].imageUrl,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (BuildContext context, Widget child,
-                          ImageChunkEvent? loadingProgress) {
-                        if (loadingProgress == null) {
-                          return child; // Display the image when fully loaded
-                        } else {
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null, // Progress indicator value
-                            ),
-                          );
-                        }
-                      },
-                      errorBuilder: (BuildContext context, Object exception,
-                          StackTrace? stackTrace) {
-                        // Handle errors when image fails to load
-                        return Icon(Icons.error, size: 50);
-                      },
-                    ),
-                  ),
-                  visits[index].content != null
-                      ? Positioned(
-                          bottom: 0,
-                          child: Stack(
-                            children: [
-                              Container(
-                                width: width,
-                                padding: const EdgeInsets.only(
-                                    bottom: 60, top: 10, left: 10, right: 10),
-                                height: 200,
-                                color: Colors.black.withOpacity(0.2),
-                                child: SingleChildScrollView(
-                                  child: Text(
-                                    visits[index].content!,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 17),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox(),
-                  Positioned(
-                    child: Center(
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.arrow_back_ios,
-                                size: 30,
-                                color: index <= 0 ? Colors.grey : Colors.white),
-                            onPressed: () {
-                              if (index > 0) {
-                                setState(() {
-                                  index--;
-                                });
-                              }
-                            },
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            icon: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 30,
-                              color: index < visits.length - 1
-                                  ? Colors.white
-                                  : Colors.grey,
-                            ),
-                            onPressed: () {
-                              if (index < visits.length - 1) {
-                                setState(() {
-                                  index++;
-                                });
-                              }
-                            },
-                          ),
-                        ],
+          child: BlocBuilder<TreesBloc, TreesState>(builder: (context, state) {
+            if (state is TreesVisitedPicsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is TreesVisitedPicsFailure) {
+              return Center(child: Text(state.message));
+            }
+            if (state is TreesVisitedPicsSuccess) {
+              if (state.visits.isEmpty) {
+                return const Center(child: Text('No visits yet'));
+              }
+              return StoryPageWidget(
+                  visits: state.visits, treeInfo: widget.treeInfo);
+            }
+            return const SizedBox();
+          }),
+        ));
+  }
+}
+
+class StoryPageWidget extends StatefulWidget {
+  const StoryPageWidget(
+      {super.key, required this.visits, required this.treeInfo});
+
+  final TreeInfo treeInfo;
+  final List<TreeVisit> visits;
+
+  @override
+  State<StoryPageWidget> createState() => _StoryPageWidgetState();
+}
+
+class _StoryPageWidgetState extends State<StoryPageWidget> {
+  int index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return Stack(children: [
+      Positioned.fill(
+          child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Image.network(
+                API.getImageUrl(widget.visits[index].imageUrl),
+                fit: BoxFit.cover,
+              ))),
+      Center(
+        child: Image.network(
+          API.getImageUrl(widget.visits[index].imageUrl),
+          fit: BoxFit.contain,
+          loadingBuilder: (BuildContext context, Widget child,
+              ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) {
+              return child; // Display the image when fully loaded
+            } else {
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null, // Progress indicator value
+                ),
+              );
+            }
+          },
+          errorBuilder:
+              (BuildContext context, Object exception, StackTrace? stackTrace) {
+            // Handle errors when image fails to load
+            return Icon(Icons.error, size: 50);
+          },
+        ),
+      ),
+      widget.visits[index].content != null
+          ? Positioned(
+              bottom: 0,
+              child: Stack(
+                children: [
+                  Container(
+                    width: width,
+                    padding: const EdgeInsets.only(
+                        bottom: 60, top: 10, left: 10, right: 10),
+                    height: 200,
+                    color: Colors.black.withOpacity(0.2),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        widget.visits[index].content!,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 17),
                       ),
                     ),
                   ),
-                  Positioned(
-                      top: 0,
-                      left: 0,
-                      child: Container(
-                        padding: EdgeInsets.only(
-                            top: MediaQuery.of(context).viewPadding.top + 10,
-                            left: 10,
-                            bottom: 20),
-                        width: width,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                        child: Center(
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 50,
-                                height: 50,
-                                child: Stack(
-                                  children: [
-                                    Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      width: 48,
-                                      height: 48,
-                                      child: Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(12.5),
-                                        ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 2,
-                                      left: 2,
-                                      width: 44,
-                                      height: 44,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: Image.network(
-                                          API.getImageUrl(
-                                              widget.treeInfo.imageUrl),
-                                          width: 44,
-                                          height: 44,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Text(widget.treeInfo.title,
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600)),
-                              const Spacer(),
-                              Text("Visited ${visits.length} times",
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400)),
-                              const SizedBox(width: 15),
-                            ],
+                ],
+              ),
+            )
+          : const SizedBox(),
+      Positioned(
+        child: Center(
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back_ios,
+                    size: 30, color: index <= 0 ? Colors.grey : Colors.white),
+                onPressed: () {
+                  if (index > 0) {
+                    setState(() {
+                      index--;
+                    });
+                  }
+                },
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 30,
+                  color: index < widget.visits.length - 1
+                      ? Colors.white
+                      : Colors.grey,
+                ),
+                onPressed: () {
+                  if (index < widget.visits.length - 1) {
+                    setState(() {
+                      index++;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      Positioned(
+          top: 0,
+          left: 0,
+          child: Container(
+            padding: EdgeInsets.only(
+                top: MediaQuery.of(context).viewPadding.top + 10,
+                left: 10,
+                bottom: 20),
+            width: width,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5),
+            ),
+            child: Center(
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          width: 48,
+                          height: 48,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.5),
+                            ),
                           ),
                         ),
-                      )),
-                  Positioned(
-                      bottom: 10,
-                      right: 10,
-                      child: Text(
-                          "Visited on ${DateFormat('hh:mm a dd MMMM yyyy').format(visits[index].time)}",
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400))),
-                ])
-              : Center(child: CircularProgressIndicator()),
-        ));
+                        Positioned(
+                          top: 2,
+                          left: 2,
+                          width: 44,
+                          height: 44,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              API.getImageUrl(widget.treeInfo.imageUrl),
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Text(widget.treeInfo.title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  Text("Visited ${widget.visits.length} times",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400)),
+                  const SizedBox(width: 15),
+                ],
+              ),
+            ),
+          )),
+      Positioned(
+          bottom: 10,
+          right: 10,
+          child: Text(
+              "Visited on ${DateFormat('hh:mm a dd MMMM yyyy').format(widget.visits[index].time)}",
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400))),
+    ]);
   }
 }
