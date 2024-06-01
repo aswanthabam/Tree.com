@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +42,6 @@ class _StoryViewerState extends State<StoryViewer> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
     return NoAppBarLayout(
         padding: 0,
         child: Container(
