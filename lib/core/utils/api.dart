@@ -30,6 +30,7 @@ class API {
     try {
       final response = await http.get(Uri.parse('$apiUrl/$path'),
           headers: headers..addAll({'Content-Type': 'application/json'}));
+      print(response.body);
       return getResponse(response.body);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});
@@ -41,7 +42,6 @@ class API {
       final response = await http.post(Uri.parse('$apiUrl/$path'),
           body: json.encode(body),
           headers: headers..addAll({'Content-Type': 'application/json'}));
-      print(response.body);
       return getResponse(response.body);
     } catch (e) {
       return APIResponse(hasError: true, message: e.toString(), data: {});

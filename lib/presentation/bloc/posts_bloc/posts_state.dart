@@ -8,7 +8,7 @@ final class PostsInitial extends PostsState {}
 final class PostsLoading extends PostsState {}
 
 final class PostsLoaded extends PostsState {
-  final List<PostModel> posts;
+  final PostModelResponse posts;
 
   PostsLoaded(this.posts);
 }

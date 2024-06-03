@@ -19,14 +19,12 @@ class PostsDataSource {
     return Right(response.message);
   }
 
-  Future<Either<List<PostModel>, String>> getPosts(String? username) async {
-    final response = await api.get('posts');
+  Future<Either<PostModelResponse, String>> getPosts(String? username) async {
+    final response = await api.get('post/get-posts');
     if (response.hasError) {
       return Right(response.message);
     }
-    final posts = response.data['posts']
-        .map<PostModel>((post) => PostModel.fromJson(post))
-        .toList();
+    final posts = PostModelResponse.fromJson(response.data);
     return Left(posts);
   }
 }

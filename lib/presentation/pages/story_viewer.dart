@@ -223,8 +223,7 @@ class _StoryPageWidgetState extends State<StoryPageWidget> {
                           height: 44,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              API.getImageUrl(widget.treeInfo.imageUrl),
+                            child: Image.network(widget.treeInfo.imageUrl,
                               width: 44,
                               height: 44,
                               fit: BoxFit.cover,

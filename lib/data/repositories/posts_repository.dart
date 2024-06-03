@@ -13,7 +13,7 @@ class PostsRepository {
     return await dataSource.addPost(image, content);
   }
 
-  Future<Either<List<PostModel>, String>> getPosts(String? username) async {
+  Future<Either<PostModelResponse, String>> getPosts(String? username) async {
     return await dataSource.getPosts(username);
   }
 }

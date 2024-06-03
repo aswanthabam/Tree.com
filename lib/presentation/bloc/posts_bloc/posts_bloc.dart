@@ -31,6 +31,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
   Future<void> _onGetPosts(GetPostsEvent event, Emitter<PostsState> emit) async {
     emit(PostsLoading());
     final response = await _repository.getPosts(event.username);
+    print(response);
     response.fold(
       (posts) => emit(PostsLoaded(posts)),
       (message) => emit(PostsLoadError(message)),

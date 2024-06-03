@@ -22,11 +22,15 @@ class _AddPostPageState extends State<AddPostPage> {
   @override
   void initState() {
     postsBloc = context.read<PostsBloc>();
+    super.initState();
     postsBloc.stream.listen((event) {
+      if (event is PostsLoading) {
+        if (mounted) Navigator.of(context).pop();
+      }
       if (event is PostAdded) {
         CustomToast.hideLoadingToast(context);
         CustomToast.showSuccessToast("Post added successfully");
-        Navigator.of(context).pop();
+        postsBloc.add(GetPostsEvent(null));
       }
       if (event is PostAddError) {
         CustomToast.hideLoadingToast(context);
@@ -37,7 +41,6 @@ class _AddPostPageState extends State<AddPostPage> {
         CustomToast.showLoadingToast(context, "Adding post");
       }
     });
-    super.initState();
   }
 
   @override
